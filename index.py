@@ -36,7 +36,31 @@ def extract_data():
     # print(sales_data)
     sales_data = sales_data.drop_duplicates(subset=['OrderId'], keep='first') # deleting duplicates and keeping the first occurence 
     sales_data = sales_data[sales_data['total_sales'] >= 0]
-    print(sales_data)
+    # print(sales_data)
+    load_into_db(sales_data)
+    
+
+
+def load_into_db(data):
+    data.to_sql('sales_data', db_connection, if_exists='replace', index=False)
+    db_connection.commit()
+
+
+def read_data():
+    
+    queris = {"get_count":"SELECT COUNT(*) FROM sales_data",
+            "total_sales_by_region":"SELECT region, SUM(total_sales) AS total_sales_amount FROM sales_data GROUP BY region",
+            "average_sales_amount/transaction":"SELECT AVG(total_sales) AS average_sales_amount FROM sales_data",
+            "find_duplicates_based_order_id":"SELECT OrderId, COUNT(*) FROM sales_data GROUP BY OrderId HAVING COUNT(*) > 1"
+            }
+    
+    for key, query  in queris.items():
+        cursor.execute(query)
+        value = cursor.fetchall()
+        print(value)        
+    
+    
     
 
 extract_data()
+read_data()
